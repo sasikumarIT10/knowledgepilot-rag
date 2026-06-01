@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: knowledgepilot-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/knowledgepilot
+      - CHROMA_PERSIST_DIRECTORY=/app/data/chroma
+      - UPLOAD_DIRECTORY=/app/data/uploads
+    volumes:
+      - ./backend:/app
+      - backend_data:/app/data
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - knowledgepilot
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: knowledgepilot-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - knowledgepilot
+
+  db:
+    image: postgres:15-alpine
+    container_name: knowledgepilot-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=knowledgepilot
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - knowledgepilot
+
+volumes:
+  backend_data:
+  postgres_data:
+
+networks:
+  knowledgepilot:
+    driver: bridge
