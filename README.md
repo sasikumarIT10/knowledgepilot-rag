@@ -5,7 +5,7 @@
   
   **Enterprise Personal Knowledge Base RAG Platform**
   
-  [![CI/CD](https://github.com/yourusername/knowledgepilot/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/knowledgepilot/actions)
+  [![CI/CD](https://github.com/sasikumarIT10/knowledgepilot-rag/actions/workflows/ci.yml/badge.svg)](https://github.com/sasikumarIT10/knowledgepilot-rag/actions)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
   [![Next.js 15](https://img.shields.io/badge/Next.js-15-black.svg)](https://nextjs.org/)
@@ -26,6 +26,23 @@ KnowledgePilot AI is a production-ready, enterprise-grade personal knowledge bas
 - **🕸️ Knowledge Graph** - Visualize document relationships
 - **🔐 Enterprise Security** - JWT authentication, role-based access
 - **🎨 Premium UI/UX** - Dark luxury tech theme with animations
+
+## 📸 Screenshots
+
+### Landing Page
+![Landing Page](docs/screenshots/landing.png)
+
+### Dashboard
+![Dashboard](docs/screenshots/dashboard.png)
+
+### AI Chat
+![AI Chat](docs/screenshots/chat.png)
+
+### Documents
+![Documents](docs/screenshots/documents.png)
+
+### Analytics
+![Analytics](docs/screenshots/analytics.png)
 
 ## 🏗️ Architecture
 
@@ -100,8 +117,8 @@ KnowledgePilot AI is a production-ready, enterprise-grade personal knowledge bas
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/knowledgepilot.git
-cd knowledgepilot
+git clone https://github.com/sasikumarIT10/knowledgepilot-rag.git
+cd knowledgepilot-rag
 ```
 
 2. **Set up environment variables**

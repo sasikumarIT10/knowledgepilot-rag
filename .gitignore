@@ -90,8 +90,6 @@ Thumbs.db
 *.temp
 .cache/
 
-# Screenshots and generated output
-screenshots/
+# Generated output (keep docs/screenshots tracked)
 output/
-docs/screenshots/
-**/screenshot*
+**/screenshot-output*
