@@ -89,3 +89,9 @@ Thumbs.db
 *.tmp
 *.temp
 .cache/
+
+# Screenshots and generated output
+screenshots/
+output/
+docs/screenshots/
+**/screenshot*
