@@ -41,6 +41,27 @@ class OpenAIEmbedder(BaseEmbedder):
         )
         self.batch_size = batch_size
     
+    def _generate_mock_embedding(self, text: str) -> list[float]:
+        """Generate a deterministic mock embedding of self.dimension for testing without API key."""
+        import hashlib
+        import random
+        
+        hash_digest = hashlib.sha256(text.encode('utf-8')).digest()
+        seed = int.from_bytes(hash_digest[:4], byteorder='big')
+        
+        # Use seed to generate deterministic pseudorandom floats
+        state = random.getstate()
+        random.seed(seed)
+        vector = [random.gauss(0, 1) for _ in range(self.dimension)]
+        random.setstate(state) # restore original random state
+        
+        # Normalize to unit length
+        magnitude = sum(x**2 for x in vector) ** 0.5
+        if magnitude > 0:
+            vector = [x / magnitude for x in vector]
+            
+        return vector
+
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),
@@ -50,6 +71,10 @@ class OpenAIEmbedder(BaseEmbedder):
         """Generate embedding for a single text."""
         if not text or not text.strip():
             return [0.0] * self.dimension
+        
+        if not settings.has_valid_openai_key:
+            logger.debug("Generating deterministic mock embedding (no valid API key)")
+            return self._generate_mock_embedding(text)
         
         try:
             response = await self.client.embeddings.create(
@@ -75,6 +100,10 @@ class OpenAIEmbedder(BaseEmbedder):
         """Generate embeddings for multiple texts."""
         if not texts:
             return []
+        
+        if not settings.has_valid_openai_key:
+            logger.debug("Generating deterministic mock batch embeddings (no valid API key)")
+            return [self._generate_mock_embedding(text) for text in texts]
         
         # Filter empty texts and track indices
         valid_texts = []

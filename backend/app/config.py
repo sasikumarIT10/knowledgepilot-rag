@@ -46,6 +46,13 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4o"
     openai_embedding_model: str = "text-embedding-3-small"
 
+    # Google AI Studio (Gemini) — free tier at https://aistudio.google.com/apikey
+    google_api_key: str | None = None
+    google_model: str = "gemini-2.0-flash"
+
+    # LLM provider for chat/RAG answers
+    llm_provider: Literal["openai", "anthropic", "google"] = "google"
+
     # Anthropic
     anthropic_api_key: str | None = None
     anthropic_model: str = "claude-3-5-sonnet-20241022"
@@ -77,8 +84,8 @@ class Settings(BaseSettings):
 
     # RAG
     rag_top_k: int = 5
-    rag_similarity_threshold: float = 0.7
-    rag_rerank_enabled: bool = True
+    rag_similarity_threshold: float = 0.25
+    rag_rerank_enabled: bool = False
 
     # Logging
     log_level: str = "INFO"
@@ -105,6 +112,52 @@ class Settings(BaseSettings):
     def max_file_size_bytes(self) -> int:
         """Get max file size in bytes."""
         return self.max_file_size_mb * 1024 * 1024
+
+    @property
+    def has_valid_openai_key(self) -> bool:
+        """Check if a real OpenAI API key is configured."""
+        key = self.openai_api_key
+        if not key or not key.strip():
+            return False
+        lowered = key.lower()
+        return (
+            key.startswith("sk-")
+            and "your" not in lowered
+            and "change" not in lowered
+            and "example" not in lowered
+        )
+
+    @property
+    def has_valid_google_key(self) -> bool:
+        """Check if a real Google AI Studio API key is configured."""
+        key = self.google_api_key
+        if not key or not key.strip():
+            return False
+        lowered = key.lower()
+        return (
+            "your" not in lowered
+            and "change" not in lowered
+            and "example" not in lowered
+        )
+
+    @property
+    def has_valid_llm(self) -> bool:
+        """Check if the configured LLM provider has a valid API key."""
+        if self.llm_provider == "google":
+            return self.has_valid_google_key
+        if self.llm_provider == "anthropic":
+            key = self.anthropic_api_key
+            return bool(key and key.strip() and "your" not in key.lower())
+        return self.has_valid_openai_key
+
+    def model_for_provider(self, provider: str | None = None) -> str:
+        """Return the default model name for an LLM provider."""
+        provider = provider or self.llm_provider
+        if provider == "google":
+            return self.google_model
+        if provider == "anthropic":
+            return self.anthropic_model
+        return self.openai_model
 
 
 @lru_cache

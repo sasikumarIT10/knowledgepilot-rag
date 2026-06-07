@@ -83,11 +83,10 @@ class Retriever:
                 if r.metadata.get("document_id") in filter_document_ids
             ]
         
-        # Filter by similarity threshold
-        results = [
-            r for r in results
-            if r.score >= self.similarity_threshold
-        ]
+        # Filter by similarity threshold (keep at least top result if any exist)
+        if results:
+            filtered = [r for r in results if r.score >= self.similarity_threshold]
+            results = filtered if filtered else [results[0]]
         
         # Limit to top_k
         results = results[:top_k]

@@ -9,13 +9,15 @@ import {
   MessageSquare,
   Calendar,
   Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 
-interface DailyUsage {
+interface DailyStats {
   date: string;
+  queries: number;
   documents_uploaded: number;
-  queries_made: number;
+  tokens_used: number;
 }
 
 interface TopTopic {
@@ -34,21 +36,24 @@ interface Analytics {
     documents_this_week: number;
     queries_this_week: number;
   };
-  daily_usage: DailyUsage[];
+  daily_stats: DailyStats[];
   top_topics: TopTopic[];
+  recent_queries?: string[];
 }
 
 export default function AnalyticsPage() {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
         const data = await api.getAnalytics();
         setAnalytics(data);
-      } catch (error) {
-        console.error('Failed to fetch analytics:', error);
+      } catch (err) {
+        console.error('Failed to fetch analytics:', err);
+        setError('Failed to load analytics. Please refresh the page.');
       } finally {
         setIsLoading(false);
       }
@@ -65,8 +70,22 @@ export default function AnalyticsPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="p-8 flex flex-col items-center justify-center min-h-[60vh] text-center">
+        <AlertCircle className="w-12 h-12 text-destructive mb-4" />
+        <h2 className="text-xl font-semibold mb-2">Analytics unavailable</h2>
+        <p className="text-secondary">{error}</p>
+      </div>
+    );
+  }
+
+  const dailyStats = analytics?.daily_stats ?? [];
+  const topTopics = analytics?.top_topics ?? [];
+
   const maxDailyQueries = Math.max(
-    ...(analytics?.daily_usage.map((d) => d.queries_made) || [1])
+    ...dailyStats.map((d) => d.queries),
+    1
   );
 
   return (
@@ -141,7 +160,7 @@ export default function AnalyticsPage() {
           </div>
 
           <div className="space-y-4">
-            {analytics?.daily_usage.slice(-7).map((day, index) => (
+            {dailyStats.slice(-7).map((day, index) => (
               <div key={day.date} className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-secondary">
@@ -151,13 +170,15 @@ export default function AnalyticsPage() {
                       day: 'numeric',
                     })}
                   </span>
-                  <span>{day.queries_made} queries</span>
+                  <span>
+                    {day.queries} queries · {day.documents_uploaded} uploads
+                  </span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{
-                      width: `${(day.queries_made / maxDailyQueries) * 100}%`,
+                      width: `${(day.queries / maxDailyQueries) * 100}%`,
                     }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
                     className="h-full bg-accent rounded-full"
@@ -166,7 +187,7 @@ export default function AnalyticsPage() {
               </div>
             ))}
 
-            {(!analytics?.daily_usage || analytics.daily_usage.length === 0) && (
+            {dailyStats.length === 0 && (
               <div className="text-center py-8 text-secondary">
                 No activity data yet
               </div>
@@ -187,11 +208,11 @@ export default function AnalyticsPage() {
           </div>
 
           <div className="space-y-4">
-            {analytics?.top_topics.map((topic, index) => (
+            {topTopics.map((topic, index) => (
               <div key={topic.topic} className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="font-medium">{topic.topic}</span>
-                  <span className="text-secondary">{topic.count} queries</span>
+                  <span className="text-secondary">{topic.count} documents</span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <motion.div
@@ -204,7 +225,7 @@ export default function AnalyticsPage() {
               </div>
             ))}
 
-            {(!analytics?.top_topics || analytics.top_topics.length === 0) && (
+            {topTopics.length === 0 && (
               <div className="text-center py-8 text-secondary">
                 No topic data yet
               </div>

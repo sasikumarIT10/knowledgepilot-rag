@@ -63,6 +63,10 @@ def create_application() -> FastAPI:
             "app": settings.app_name,
             "version": "1.0.0",
             "environment": settings.app_env,
+            "llm_provider": settings.llm_provider,
+            "llm_configured": settings.has_valid_llm,
+            "google_configured": settings.has_valid_google_key,
+            "openai_configured": settings.has_valid_openai_key,
         }
 
     @app.get("/", tags=["Root"])

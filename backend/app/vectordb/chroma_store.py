@@ -249,8 +249,7 @@ class ChromaVectorStore(BaseVectorStore):
             distances = results["distances"][0] if results["distances"] else [0.0] * len(ids)
             
             for i, id_ in enumerate(ids):
-                # Convert distance to similarity score (ChromaDB uses L2 distance)
-                # Lower distance = higher similarity
+                # Convert distance to similarity (works for L2 and cosine distance)
                 score = 1.0 / (1.0 + distances[i])
                 
                 search_results.append(

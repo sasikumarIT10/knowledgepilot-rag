@@ -1,0 +1,12 @@
+{
+  "name": "knowledgepilot-scripts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "record-demo": "node record-demo.mjs",
+    "capture-screenshots": "node capture-screenshots.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  }
+}

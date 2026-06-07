@@ -89,10 +89,12 @@ export default function ChatPage() {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
+    const messageText = input.trim();
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: input.trim(),
+      content: messageText,
       created_at: new Date().toISOString(),
     };
 
@@ -101,7 +103,7 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
-      const response = await api.sendMessage(input.trim(), currentSessionId || undefined, {
+      const response = await api.sendMessage(messageText, currentSessionId || undefined, {
         include_sources: true,
         max_sources: 5,
       });
@@ -121,12 +123,22 @@ export default function ChatPage() {
         setCurrentSession(response.session_id);
         loadSessions();
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to send message:', error);
+      let errorMessage = 'Sorry, I encountered an error processing your request.';
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: { detail?: string | { msg: string }[] } } };
+        const detail = axiosError.response?.data?.detail;
+        if (typeof detail === 'string') {
+          errorMessage = detail;
+        } else if (Array.isArray(detail) && detail[0]?.msg) {
+          errorMessage = detail[0].msg;
+        }
+      }
       addMessage({
         id: Date.now().toString(),
         role: 'assistant',
-        content: 'Sorry, I encountered an error processing your request. Please try again.',
+        content: errorMessage,
         created_at: new Date().toISOString(),
       });
     } finally {

@@ -43,6 +43,11 @@ async def process_document_task(
         doc_service = DocumentService(db)
         
         try:
+            if not settings.has_valid_openai_key:
+                logger.warning(
+                    "OpenAI API key is not configured. Proceeding with deterministic mock embeddings for demo purposes."
+                )
+            
             # Get document
             document = await doc_service.get_by_id(document_id, user_id)
             if not document:
@@ -221,6 +226,9 @@ async def upload_document(
         tags=tag_list,
     )
     
+    # Commit before background task so processing can read the new document
+    await db.commit()
+
     # Queue background processing
     background_tasks.add_task(
         process_document_task,

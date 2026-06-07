@@ -190,12 +190,7 @@ Relevance: {score:.2%}
         context = self.build_context(retrieved_chunks, max_context_tokens)
         
         if not context:
-            # No context found
-            return [
-                {"role": "system", "content": "You are KnowledgePilot AI."},
-                {"role": "user", "content": question},
-                {"role": "assistant", "content": self.NO_CONTEXT_RESPONSE},
-            ]
+            return []
         
         # Choose template based on conversation history
         if conversation_history:

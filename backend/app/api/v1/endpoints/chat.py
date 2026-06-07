@@ -8,6 +8,7 @@ import structlog
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import StreamingResponse
 
+from app.config import settings
 from app.core.dependencies import DbSession, CurrentUser
 from app.schemas.chat import (
     ChatRequest,
@@ -62,7 +63,7 @@ async def chat(
     # Execute RAG pipeline
     rag_pipeline = RAGPipeline(
         model=request.model,
-        provider="openai",  # Default to OpenAI
+        provider=settings.llm_provider,
     )
     
     try:
@@ -73,11 +74,25 @@ async def chat(
             top_k=request.max_sources,
             temperature=request.temperature,
         )
+    except ValueError as e:
+        logger.warning("RAG configuration error", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(e),
+        )
     except Exception as e:
         logger.error("RAG query failed", error=str(e))
+        error_msg = str(e)
+        if "invalid_api_key" in error_msg or "Incorrect API key" in error_msg:
+            detail = (
+                "Invalid API key. Update GOOGLE_API_KEY or OPENAI_API_KEY in backend/.env "
+                "(Google free key: https://aistudio.google.com/apikey)"
+            )
+        else:
+            detail = f"Failed to generate response: {error_msg}"
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to generate response",
+            detail=detail,
         )
     
     # Save assistant message
@@ -141,7 +156,7 @@ async def chat_stream(
         """Generate streaming response."""
         rag_pipeline = RAGPipeline(
             model=request.model,
-            provider="openai",
+            provider=settings.llm_provider,
         )
         
         full_content = ""
